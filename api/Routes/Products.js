@@ -117,28 +117,61 @@ router.put("/:productId", (req, res, next) => {
 router.patch("/:productId", (req, res, next) => {
   const productId = req.params.productId;
   const updateOps = {};
+
   for (const ops of req.body) {
     updateOps[ops.propName] = ops.value;
   }
-  Product.update(
-    {
-      _id: productId,
-    },
-    {
-      $set: updateOps,
-    }
-    // {
-    //   $set: { name: req.body.newName, price: req.body.newPrice },
-    // }
-  )
+
+  if (Object.keys(updateOps).length === 0) {
+    return res.status(400).json({ message: "No update fields provided" });
+  }
+
+  Product.updateOne({ _id: productId }, { $set: updateOps })
     .exec()
     .then((result) => {
-      res.status(200).json(result);
+      console.log("Update result:", result); // Log result for debugging
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      if (result.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Product updated successfully" });
+      }
+      res.status(304).json({ message: "No changes applied" });
     })
     .catch((err) => {
-      res.status(500).json({ error: err });
+      console.log("Error:", err); // Log error for debugging
+      res.status(500).json({ error: err.message });
     });
 });
+
+// router.patch("/:productId", (req, res, next) => {
+//   const productId = req.params.productId;
+//   const updateOps = {};
+
+//   // Assuming req.body is an array of operations, e.g., [{ propName: 'name', value: 'New Name' }, { propName: 'price', value: 20 }]
+//   for (const ops of req.body) {
+//     updateOps[ops.propName] = ops.value;
+//   }
+
+//   Product.updateOne({ _id: productId }, { $set: updateOps })
+//     .exec()
+//     .then((result) => {
+//       if (result.nModified > 0) {
+//         res.status(200).json({ message: "Product updated successfully" });
+//       } else {
+//         res
+//           .status(404)
+//           .json({ message: "Product not found or no change applied" });
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({ error: err.message });
+//     });
+// });
 
 // router.patch("/:productId", (req, res, next) => {
 //   const productId = req.params.productId;

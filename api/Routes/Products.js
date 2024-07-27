@@ -8,9 +8,21 @@ router.get("/", (req, res, next) => {
   });
 });
 
+// router.post("/", (req, res, next) => {
+//   res.status(200).json({
+//     message: "Handling POST Requests to /products",
+//   });
+// });
+
 router.post("/", (req, res, next) => {
-  res.status(200).json({
-    message: "Handling POST Requests to /products",
+  const product = {
+    name: req.body.name,
+    price: req.body.price,
+  };
+  //console.log(product.name, product.price);
+  res.status(201).json({
+    message: "Received The POST Request  ",
+    createdProduct: product,
   });
 });
 

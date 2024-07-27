@@ -84,10 +84,28 @@ router.get("/:productId", (req, res, next) => {
 
 router.delete("/:productId", (req, res, next) => {
   const productId = req.params.productId;
-  res.status(200).json({
-    message: "Handling Delete Requests to /products",
-  });
+
+  Product.deleteOne({ _id: productId })
+    .exec()
+    .then((result) => {
+      if (result.deletedCount > 0) {
+        res.status(200).json({ message: "Product deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Product not found" });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: err.message });
+    });
 });
+
+// router.delete("/:productId", (req, res, next) => {
+//   const productId = req.params.productId;
+//   res.status(200).json({
+//     message: "Handling Delete Requests to /products",
+//   });
+// });
 
 router.put("/:productId", (req, res, next) => {
   const productId = req.params.productId;
@@ -98,11 +116,37 @@ router.put("/:productId", (req, res, next) => {
 
 router.patch("/:productId", (req, res, next) => {
   const productId = req.params.productId;
-  res.status(200).json({
-    message: "Handling PATCH Requests to /products",
-    id: productId,
-  });
+  const updateOps = {};
+  for (const ops of req.body) {
+    updateOps[ops.propName] = ops.value;
+  }
+  Product.update(
+    {
+      _id: productId,
+    },
+    {
+      $set: updateOps,
+    }
+    // {
+    //   $set: { name: req.body.newName, price: req.body.newPrice },
+    // }
+  )
+    .exec()
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((err) => {
+      res.status(500).json({ error: err });
+    });
 });
+
+// router.patch("/:productId", (req, res, next) => {
+//   const productId = req.params.productId;
+//   res.status(200).json({
+//     message: "Handling PATCH Requests to /products",
+//     id: productId,
+//   });
+// });
 
 router.get("/:productId", (req, res, next) => {
   const id = req.params.productId;

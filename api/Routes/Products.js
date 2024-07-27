@@ -15,6 +15,14 @@ router.post("/", (req, res, next) => {
 });
 
 router.get("/:productId", (req, res, next) => {
+  const productId = req.params.productId;
+  res.status(200).json({
+    message: "Handling Get Requests to /products",
+    id: productId,
+  });
+});
+
+router.get("/:productId", (req, res, next) => {
   const id = req.params.productId;
 
   if (id === "special") {

@@ -3,11 +3,11 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const Product = require("../Models/product");
 
-router.get("/", (req, res, next) => {
-  res.status(200).json({
-    message: "Handling GET Requests to /products",
-  });
-});
+// router.get("/", (req, res, next) => {
+//   res.status(200).json({
+//     message: "Handling GET Requests to /products",
+//   });
+// });
 
 //api to post data to DB
 router.post("/", (req, res, next) => {
@@ -32,11 +32,32 @@ router.post("/", (req, res, next) => {
     });
 });
 
-//api to get data from DB
+//api to get data from DB using ID
 
 router.get("/:productId", (req, res, next) => {
   const productId = req.params.productId;
   Product.findById(productId)
+    .exec()
+    .then((doc) => {
+      console.log(doc);
+      res.status(200).json({
+        message: "Handling Get Requests to /products",
+        doc,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
+      });
+    });
+});
+
+//api to get all data from DB
+
+router.get("/", (req, res, next) => {
+  const productId = req.params.productId;
+  Product.find()
     .exec()
     .then((doc) => {
       console.log(doc);

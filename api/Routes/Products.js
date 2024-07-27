@@ -9,6 +9,7 @@ router.get("/", (req, res, next) => {
   });
 });
 
+//api to post data to DB
 router.post("/", (req, res, next) => {
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
@@ -27,6 +28,27 @@ router.post("/", (req, res, next) => {
     .catch((err) => {
       res.status(500).json({
         error: err.message,
+      });
+    });
+});
+
+//api to get data from DB
+
+router.get("/:productId", (req, res, next) => {
+  const productId = req.params.productId;
+  Product.findById(productId)
+    .exec()
+    .then((doc) => {
+      console.log(doc);
+      res.status(200).json({
+        message: "Handling Get Requests to /products",
+        doc,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
       });
     });
 });

@@ -64,21 +64,54 @@ router.get("/:orderId", (req, res, next) => {
 // });
 
 router.post("/", (req, res, next) => {
-  const order = new Order({
-    _id: new mongoose.Types.ObjectId(),
-    quantity: req.body.quantity,
-    product: req.body.productId,
-  });
-  order
-    .save()
+  // Check if the product ID exists in the request body
+  if (!req.body.productId) {
+    return res.status(400).json({
+      message: "Product ID is required",
+    });
+  }
+
+  // Find the product by its ID
+  product
+    .findById(req.body.productId)
+    .then((product) => {
+      // If product not found, return 404
+      if (!product) {
+        return res.status(404).json({
+          message: "Product not found",
+        });
+      }
+
+      // Create a new order
+      const order = new Order({
+        _id: new mongoose.Types.ObjectId(),
+        quantity: req.body.quantity,
+        product: req.body.productId,
+      });
+
+      // Save the new order
+      return order.save();
+    })
     .then((result) => {
-      console.log(result);
-      res.status(200).json(result);
+      // Send a response with the created order
+      res.status(201).json({
+        message: "Order Created",
+        createdOrder: {
+          _id: result._id,
+          product: result.product,
+          quantity: result.quantity,
+        },
+        request: {
+          type: "GET",
+          url: "http://localhost:3000/orders/" + result._id,
+        },
+      });
     })
     .catch((err) => {
-      console.log(err);
+      // Handle errors
+      console.error(err);
       res.status(500).json({
-        error: err,
+        error: err.message,
       });
     });
 });

@@ -63,12 +63,43 @@ router.get("/:orderId", (req, res, next) => {
     });
 });
 
+// router.delete("/:orderId", (req, res, next) => {
+//   const orderId = req.params.orderId;
+//   res.status(200).json({
+//     message: "order Deleted with specific ID",
+//     id: orderId,
+//   });
+// });
+
 router.delete("/:orderId", (req, res, next) => {
-  const orderId = req.params.orderId;
-  res.status(200).json({
-    message: "order Deleted with specific ID",
-    id: orderId,
-  });
+  Order.deleteOne({ _id: req.params.orderId })
+    .exec()
+    .then((result) => {
+      if (result.deletedCount === 0) {
+        // Handle the case where no document was deleted
+        return res.status(404).json({
+          message: "Order not found",
+        });
+      }
+
+      res.status(200).json({
+        message: "Order Deleted",
+        request: {
+          type: "POST",
+          url: "http://localhost:3000/orders",
+          body: {
+            productId: "ID", // This is a placeholder. You might want to use the actual schema definition here.
+            quantity: "Number", // Same here; use the actual schema definition.
+          },
+        },
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({
+        error: err.message, // Use err.message for a clearer error message
+      });
+    });
 });
 
 // router.post("/", (req, res, next) => {

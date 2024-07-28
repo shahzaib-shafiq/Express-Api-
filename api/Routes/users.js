@@ -1,11 +1,11 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const router = express.Router();
-const User = require("../Models/users");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+const User = require("../Models/users");
+
 router.post("/signup", (req, res, next) => {
-  console.log("Signup route hit");
   User.find({ email: req.body.email })
     .exec()
     .then((user) => {
@@ -61,5 +61,4 @@ router.delete("/:userId", (req, res, next) => {
     });
 });
 
-module.exports = router;
 module.exports = router;

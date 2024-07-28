@@ -2,6 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Product = require("../Models/product");
+const multer = require("multer");
+const upload = multer({
+  dest: "C:/Users/Shahzaib Shafiq/Downloads/express/uploads",
+});
 
 // router.get("/", (req, res, next) => {
 //   res.status(200).json({
@@ -10,11 +14,15 @@ const Product = require("../Models/product");
 // });
 
 //api to post data to DB
-router.post("/", (req, res, next) => {
+router.post("/", upload.single("productImage"), (req, res, next) => {
+  console.log(req.file); // This will log the uploaded file information
+
+  // Create a new product with image information
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+    productImage: req.file ? req.file.path : undefined, // Save file path to the database
   });
 
   product
@@ -37,6 +45,7 @@ router.post("/", (req, res, next) => {
 router.get("/:productId", (req, res, next) => {
   const productId = req.params.productId;
   Product.findById(productId)
+    .select("name price _id productImage")
     .exec()
     .then((doc) => {
       console.log(doc);

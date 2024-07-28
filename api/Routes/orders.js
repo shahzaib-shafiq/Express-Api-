@@ -10,10 +10,10 @@ const product = require("../Models/product");
 //     message: "order were fetched from server",
 //   });
 // });
-
 router.get("/", (req, res, next) => {
   Order.find()
     .select("product quantity _id")
+    .populate("product", "name") // Ensure that the 'product' field is correctly referenced
     .exec()
     .then((docs) => {
       res.status(200).json({
@@ -21,7 +21,7 @@ router.get("/", (req, res, next) => {
         orders: docs.map((doc) => {
           return {
             _id: doc._id,
-            product: doc.productId,
+            product: doc.product.name, // Access the populated field correctly
             quantity: doc.quantity,
             request: {
               type: "GET",
@@ -32,7 +32,8 @@ router.get("/", (req, res, next) => {
       });
     })
     .catch((err) => {
-      res.status(404).json({ error: err });
+      console.error(err); // Log the error for debugging
+      res.status(500).json({ error: err.message }); // Use a 500 status code for server errors
     });
 });
 

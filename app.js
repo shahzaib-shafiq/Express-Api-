@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 const productRoutes = require("./api/Routes/Products");
 const ordersRoutes = require("./api/Routes/orders");
-
+const userRoutes = require("./api/Routes/users");
 const app = express();
 const port = 3000;
 
@@ -36,6 +36,7 @@ app.use((req, res, next) => {
 
 app.use("/products", productRoutes);
 app.use("/orders", ordersRoutes);
+app.use("/users", userRoutes);
 
 app.use((req, res, next) => {
   const error = new Error("Not Found");

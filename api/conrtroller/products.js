@@ -2,32 +2,15 @@ const mongoose = require("mongoose");
 const Product = require("../Models/product");
 
 exports.products_get_all = (req, res, next) => {
+  const productId = req.params.productId;
   Product.find()
-    .select("name price _id productImage")
     .exec()
-    .then((docs) => {
-      const response = {
-        count: docs.length,
-        products: docs.map((doc) => {
-          return {
-            name: doc.name,
-            price: doc.price,
-            productImage: doc.productImage,
-            _id: doc._id,
-            request: {
-              type: "GET",
-              url: "http://localhost:3000/products/" + doc._id,
-            },
-          };
-        }),
-      };
-      //   if (docs.length >= 0) {
-      res.status(200).json(response);
-      //   } else {
-      //       res.status(404).json({
-      //           message: 'No entries found'
-      //       });
-      //   }
+    .then((doc) => {
+      console.log(doc);
+      res.status(200).json({
+        message: "Handling Get Requests to /products",
+        doc,
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -38,107 +21,98 @@ exports.products_get_all = (req, res, next) => {
 };
 
 exports.products_create_product = (req, res, next) => {
+  console.log(req.file);
+
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
-    productImage: req.file.path,
+    productImage: req.file ? req.file.path : undefined,
   });
+
   product
     .save()
     .then((result) => {
-      console.log(result);
       res.status(201).json({
-        message: "Created product successfully",
-        createdProduct: {
-          name: result.name,
-          price: result.price,
-          _id: result._id,
-          request: {
-            type: "GET",
-            url: "http://localhost:3000/products/" + result._id,
-          },
-        },
+        message: "Product created successfully",
+        createdProduct: result,
       });
     })
     .catch((err) => {
-      console.log(err);
+      console.log("error");
       res.status(500).json({
-        error: err,
+        error: err.message,
       });
     });
 };
 
 exports.products_get_product = (req, res, next) => {
-  const id = req.params.productId;
-  Product.findById(id)
+  const productId = req.params.productId;
+  Product.findById(productId)
     .select("name price _id productImage")
     .exec()
     .then((doc) => {
-      console.log("From database", doc);
-      if (doc) {
-        res.status(200).json({
-          product: doc,
-          request: {
-            type: "GET",
-            url: "http://localhost:3000/products",
-          },
-        });
-      } else {
-        res
-          .status(404)
-          .json({ message: "No valid entry found for provided ID" });
-      }
+      console.log(doc);
+      res.status(200).json({
+        message: "Handling Get Requests to /products",
+        doc,
+      });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({ error: err });
+      res.status(500).json({
+        error: err,
+      });
     });
 };
 
 exports.products_update_product = (req, res, next) => {
-  const id = req.params.productId;
+  const productId = req.params.productId;
   const updateOps = {};
+
   for (const ops of req.body) {
     updateOps[ops.propName] = ops.value;
   }
-  Product.update({ _id: id }, { $set: updateOps })
+
+  if (Object.keys(updateOps).length === 0) {
+    return res.status(400).json({ message: "No update fields provided" });
+  }
+
+  Product.updateOne({ _id: productId }, { $set: updateOps })
     .exec()
     .then((result) => {
-      res.status(200).json({
-        message: "Product updated",
-        request: {
-          type: "GET",
-          url: "http://localhost:3000/products/" + id,
-        },
-      });
+      console.log("Update result:", result); // Log result for debugging
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      if (result.modifiedCount > 0) {
+        return res
+          .status(200)
+          .json({ message: "Product updated successfully" });
+      }
+      res.status(304).json({ message: "No changes applied" });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+      console.log("Error:", err); // Log error for debugging
+      res.status(500).json({ error: err.message });
     });
 };
 
 exports.products_delete = (req, res, next) => {
-  const id = req.params.productId;
-  Product.remove({ _id: id })
+  const productId = req.params.productId;
+
+  Product.deleteOne({ _id: productId })
     .exec()
     .then((result) => {
-      res.status(200).json({
-        message: "Product deleted",
-        request: {
-          type: "POST",
-          url: "http://localhost:3000/products",
-          body: { name: "String", price: "Number" },
-        },
-      });
+      if (result.deletedCount > 0) {
+        res.status(200).json({ message: "Product deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Product not found" });
+      }
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+      res.status(500).json({ error: err.message });
     });
 };

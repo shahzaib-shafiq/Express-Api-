@@ -45,39 +45,44 @@ exports.user_signup = (req, res, next) => {
 };
 
 exports.user_login = (req, res, next) => {
-  User.find({ email: req.body.email })
+  console.log(process.env.JWT_KEY);
+  User.findOne({ email: req.body.email })
     .exec()
     .then((user) => {
-      if (user.length < 1) {
+      if (!user) {
         return res.status(401).json({
-          message: "Auth failed",
+          message: "Auth Failed",
         });
       }
-      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
+
+      bcrypt.compare(req.body.password, user.password, (err, result) => {
         if (err) {
-          return res.status(401).json({
-            message: "Auth failed",
+          return res.status(500).json({
+            message: "Auth Failed",
+            error: err,
           });
         }
+
         if (result) {
           const token = jwt.sign(
             {
-              email: user[0].email,
-              userId: user[0]._id,
+              email: user.email,
+              userId: user._id,
             },
             process.env.JWT_KEY,
             {
-              expiresIn: "1h",
+              expiresIn: "1hr",
             }
           );
           return res.status(200).json({
-            message: "Auth successful",
+            message: "Auth Successful",
             token: token,
           });
+        } else {
+          return res.status(401).json({
+            message: "Auth Failed",
+          });
         }
-        res.status(401).json({
-          message: "Auth failed",
-        });
       });
     })
     .catch((err) => {
@@ -88,18 +93,22 @@ exports.user_login = (req, res, next) => {
     });
 };
 
-exports.user_delete = (req, res, next) => {
-  User.remove({ _id: req.params.userId })
-    .exec()
-    .then((result) => {
-      res.status(200).json({
-        message: "User deleted",
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
-    });
+exports.user_delete = async (req, res) => {
+  const userId = req.params.userId;
+
+  console.log(`Attempting to delete user with ID: ${userId}`);
+
+  try {
+    const result = await User.findByIdAndDelete(userId);
+
+    if (!result) {
+      console.log("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ error: err.message });
+  }
 };

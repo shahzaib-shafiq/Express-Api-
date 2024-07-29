@@ -4,9 +4,10 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/users");
+require("dotenv").config();
 
 // require("dotenv").config();
-// console.log(process.env);
+console.log(process.env.JWT_KEY);
 
 router.post("/signup", (req, res, next) => {
   User.find({ email: req.body.email })
@@ -73,7 +74,7 @@ router.post("/login", (req, res, next) => {
               email: user.email,
               userId: user._id,
             },
-            "Secret",
+            process.env.JWT_KEY,
             {
               expiresIn: "1hr",
             }

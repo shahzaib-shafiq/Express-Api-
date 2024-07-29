@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const Product = require("../Models/product");
 const multer = require("multer");
+const checkAuth = require("../middleware/check-auth");
 const upload = multer({
   dest: "C:/Users/Shahzaib Shafiq/Downloads/express/uploads",
 });
@@ -14,15 +15,15 @@ const upload = multer({
 // });
 
 //api to post data to DB
-router.post("/", upload.single("productImage"), (req, res, next) => {
-  console.log(req.file); // This will log the uploaded file information
 
-  // Create a new product with image information
+router.post("/", upload.single("productImage"), checkAuth, (req, res, next) => {
+  console.log(req.file);
+
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
-    productImage: req.file ? req.file.path : undefined, // Save file path to the database
+    productImage: req.file ? req.file.path : undefined,
   });
 
   product
@@ -34,6 +35,7 @@ router.post("/", upload.single("productImage"), (req, res, next) => {
       });
     })
     .catch((err) => {
+      console.log("error");
       res.status(500).json({
         error: err.message,
       });
